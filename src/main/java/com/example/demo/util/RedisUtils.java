@@ -1,20 +1,20 @@
 package com.example.demo.util;
 
-import com.example.demo.entity.Image;
-import com.example.demo.entity.ImageRatio;
-import com.example.demo.entity.KeyWord;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import com.example.demo.entity.ImageRatio;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 @Component(value="redisUtils")
 public class RedisUtils {
@@ -54,55 +54,6 @@ public class RedisUtils {
 		redisImageRatioValue = getByKey("img_ratio");
 	}
 	
-	public static void main(String[] args) {
-//		Jedis jedis = jedisPool.getResource();
-//		System.err.println(jedis.ping());
-//		System.out.println(getByKey("img_ratio"));
-//		System.out.println(getByKey("img_key"));
-//		System.out.println(getByKey("imageList"));
-		
-		
-//		System.out.println(putByKey("imageList", getJsonImageList()));
-//		System.out.println(putByKey("imageRatioList", getJsonImageRatioList()));
-		
-//		System.out.println(putByKey("imageRatioList", getJsonImageRatioList()));
-
-	}
-	
-	public static String getJsonImageList() {
-		ObjectMapper jacksonMapper = new ObjectMapper();
-		
-		KeyWord k11 = new KeyWord("中文", "12-33-40", 1.1D);
-		KeyWord k12 = new KeyWord("英文", "12-33-42", 1.2D);
-		KeyWord k13 = new KeyWord("日文", "12-33-41", 1.5D);
-		
-		List<KeyWord> languageWordList = new ArrayList<KeyWord>();
-		languageWordList.add(k11);
-		languageWordList.add(k12);
-		languageWordList.add(k13);
-		
-		KeyWord k21 = new KeyWord("手机", "12-12-42", 1.2D);
-		KeyWord k22 = new KeyWord("电脑", "12-12-41", 1.5D);
-		
-		List<KeyWord> digitalKeyWordList = new ArrayList<KeyWord>();
-		digitalKeyWordList.add(k21);
-		digitalKeyWordList.add(k22);
-		
-//		Image languageImage = new Image("11", 3D, languageWordList);
-//		Image digitalImage = new Image("33", 1D, digitalKeyWordList);
-		
-		List<Image> imageList = new ArrayList<Image>();
-//		imageList.add(languageImage);
-//		imageList.add(digitalImage);
-		
-		String json = null;
-		try {
-			json = jacksonMapper.writeValueAsString(imageList);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-		return json;
-	}
 	
 	public static String getJsonImageRatioList() {
 		ObjectMapper jacksonMapper = new ObjectMapper();
@@ -146,7 +97,6 @@ public class RedisUtils {
 	
 	public static String getRedisValueByKey(String key){
 		String valueString = null;
-
 		switch (key) {
 			case "img_key" : {
 				valueString = redisImageValue;
