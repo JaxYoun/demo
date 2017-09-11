@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="mySfnttool">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/lib/mySfnttool.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
