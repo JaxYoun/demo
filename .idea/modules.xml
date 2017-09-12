@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../NaiveVertx.iml" filepath="$PROJECT_DIR$/../NaiveVertx.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../NaiveVertx/NaiveVertxDemo.iml" filepath="$PROJECT_DIR$/../NaiveVertx/NaiveVertxDemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/demo.iml" filepath="$PROJECT_DIR$/demo.iml" />
     </modules>
   </component>
 </project>

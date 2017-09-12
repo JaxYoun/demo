@@ -20,6 +20,7 @@ import redis.clients.jedis.JedisPoolConfig;
 public class RedisUtils {
 	
 	public static String redisImageValue = null;
+	public static String redisMyImageValue = null;
 	public static String redisPngValue = null;
 	public static String redisSvgValue = null;
 	public static String redisSvgIconValue = null;  //svg_icon_key
@@ -47,6 +48,7 @@ public class RedisUtils {
 //		jedisPool = new JedisPool(config, "localhost", 6379, 100, null);
 		
 		redisImageValue = getByKey("img_key");
+		redisMyImageValue = getByKey("my_img_key");
 		redisPngValue = getByKey("png_key");
 		redisSvgValue = getByKey("svg_key");
 		redisSvgIconValue = getByKey("svg_icon_key");
@@ -102,6 +104,10 @@ public class RedisUtils {
 				valueString = redisImageValue;
 				break;
 			}
+			case "my_img_key" : {
+				valueString = redisMyImageValue;
+				break;
+			}
 			case "png_key" : {
 				valueString = redisPngValue;
 				break;
@@ -130,6 +136,7 @@ public class RedisUtils {
 	
 	public static void loadAllValueFromRedis(){
 		redisImageValue = getByKey("img_key");
+		redisMyImageValue = getByKey("my_img_key");
 		redisPngValue = getByKey("png_key");
 		redisSvgValue = getByKey("svg_key");
 		redisSvgIconValue = getByKey("svg_icon_key");

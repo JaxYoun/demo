@@ -48,7 +48,7 @@ public class Adaptor implements Callable<Double> {
 	/**
 	 * 
 	 * @param keyWord
-	 * @param imageCode
+	 * @param dbImage
 	 * @return
 	 */
 	public Double fit(KeyWord keyWord, Image dbImage) {

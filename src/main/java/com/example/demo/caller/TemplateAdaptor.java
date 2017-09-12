@@ -59,13 +59,14 @@ public class TemplateAdaptor implements Callable<List<Image>> {
 
         float rate = 0F;
 		if(tamplateImage.getWidth() != null && tamplateImage.getHeight() != null){
-            float kk = (float) (tamplateImage.getWidth() / tamplateImage.getHeight());  //yjx?
+            float kk = 1F * tamplateImage.getWidth() / tamplateImage.getHeight();  //yjx?
             rate = getTop(kk);
         }
 		List<Double> positionList = tamplateImage.getPosition();
 
 		List<Image> iList = new ArrayList<>();
-		if(positionList == null || positionList.size() <= 0){
+//		if(positionList == null || positionList.size() <= 0){
+		if(false){
 			for (Image rImage : rImageList) {
 				Image imgIt;
 				try {
@@ -136,9 +137,19 @@ public class TemplateAdaptor implements Callable<List<Image>> {
 //			System.err.println(rate + "||" + positionList.toString() + "||" + width + "||" + height);
 //			System.out.println(sub.getPosition() + "||" + sub.getXy() + "||" + sub.getWidth() + "||" + sub.getHeight());
 
+			boolean isPositionListBlank = (positionList == null || positionList.size() <= 0);
+
 			switch (type) {
 				case "img_key" : {
-					if (positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()) {
+					if (!isPositionListBlank && positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()) {
+						subimageList.add(sub);
+					}else if(rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()){
+						subimageList.add(sub);
+					}
+					break;
+				}
+				case "my_img_key" : {
+					if (!isPositionListBlank && positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()) {
 						subimageList.add(sub);
 					}else if(rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()){
 						subimageList.add(sub);
@@ -146,7 +157,7 @@ public class TemplateAdaptor implements Callable<List<Image>> {
 					break;
 				}
 				case "tmp_key" : {
-					if (positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()) {
+					if (!isPositionListBlank && positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()) {
 						subimageList.add(sub);
 					}else if(rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()){
 						subimageList.add(sub);
@@ -154,13 +165,19 @@ public class TemplateAdaptor implements Callable<List<Image>> {
 					break;
 				}
 				case "png_key" : {
-					if (positionList.contains(sub.getXy()) && width <= sub.getWidth() && height <= sub.getHeight()) {
+					if (!isPositionListBlank && positionList.contains(sub.getXy()) && width <= sub.getWidth() && height <= sub.getHeight()) {
 						subimageList.add(sub);
 					}
 					break;
 				}
 				case "svg_key" : {
-					if (positionList.contains(sub.getXy())) {
+					if (!isPositionListBlank && positionList.contains(sub.getXy())) {
+						subimageList.add(sub);
+					}
+					break;
+				}
+				case "svg_icon_key" : {
+					if (!isPositionListBlank && positionList.contains(sub.getXy())) {
 						subimageList.add(sub);
 					}
 					break;
