@@ -106,8 +106,7 @@ public class NewKeyWordController {
 
 					try {
 						if (dbImage != null) {
-							futureTask = new FutureTask<Double>(
-									new Adaptor(imageRatioMap, image, keywordList, dbImage));
+							futureTask = new FutureTask<Double>(new Adaptor(imageRatioMap, image, keywordList, dbImage));
 							fixedPool.submit(futureTask);
 							resultList.add(new Image(image.getId(), futureTask.get(), null, null, null, null,null));
 						} else {
