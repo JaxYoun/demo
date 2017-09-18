@@ -1,9 +1,6 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.caller.NeoImageCaller;
-import com.example.demo.caller.TemplateAdaptor;
-import com.example.demo.entity.Image;
-import com.example.demo.entity.ImageRatio;
 import com.example.demo.entity.neotemplate.*;
 import com.example.demo.service.IImageService;
 import com.example.demo.util.RedisUtils;
@@ -15,10 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,17 +24,20 @@ public class ImageService implements IImageService {
     @Autowired
     private static RedisUtils redisUtils;
 
-    static final ExecutorService fixedPool = Executors.newFixedThreadPool(256);
+    static final ExecutorService fixedPool = Executors.newFixedThreadPool(6);
 
     private static final ObjectMapper jacksonMapper = new ObjectMapper();
+
+    volatile Set<String> idSet;
 
     @Override
     public NeoResponsePacket getImageByTemplate(final NeoRequestPacket neoRequestPacket) {
         String type = neoRequestPacket.getType();
         List<NeoRedisParentImage> neoRedisParentImageList = null;
+        idSet = new HashSet<>();
         try {
             neoRedisParentImageList = jacksonMapper.readValue(redisUtils.getRedisValueByKey(type), new TypeReference<List<NeoRedisParentImage>>() {});
-            Map<String, Float> imageRatioMap = getImageRatioMapFromRedis("img_ratio");
+//            Map<String, Float> imageRatioMap = getImageRatioMapFromRedis("img_ratio");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -54,11 +51,15 @@ public class ImageService implements IImageService {
          */
         List<NeoRequestImage> requestImageList = neoRequestPacket.getImageList();
         for(NeoRequestImage neoRequestImage : requestImageList) {
-            FutureTask<NeoResponseImage> futureTask = new FutureTask<NeoResponseImage>(new NeoImageCaller(type, neoRequestImage, neoRedisParentImageList, getImageRatioMapFromRedis("img_ratio")));
+            FutureTask<NeoResponseImage> futureTask = new FutureTask<NeoResponseImage>(new NeoImageCaller(type, neoRequestImage, neoRedisParentImageList, getImageRatioMapFromRedis("img_ratio"), idSet));
             fixedPool.submit(futureTask);
 
             try {
-                neoResponseImageList.add(futureTask.get());
+                NeoResponseImage responseImage = futureTask.get();
+                if(responseImage != null){
+                    neoResponseImageList.add(responseImage);
+                    idSet.add(responseImage.getImg_id());
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
@@ -92,4 +93,5 @@ public class ImageService implements IImageService {
         }
         return ratioMap;
     }
+
 }

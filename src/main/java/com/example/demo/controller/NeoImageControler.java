@@ -2,13 +2,9 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.neotemplate.NeoRequestPacket;
 import com.example.demo.entity.neotemplate.NeoResponsePacket;
-import com.example.demo.entity.template.TemplatePacket;
 import com.example.demo.service.IImageService;
-import com.example.demo.util.PropertiesUtil;
 import com.example.demo.util.RedisUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +18,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @RestController
-@RequestMapping(value = "/image")
+//@RequestMapping(value = "/image")
+@RequestMapping(value = "/template")
 public class NeoImageControler {
 
     @Autowired

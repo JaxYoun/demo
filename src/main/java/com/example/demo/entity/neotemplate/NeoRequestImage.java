@@ -15,12 +15,12 @@ public class NeoRequestImage implements Serializable, Cloneable {
     private Integer height;
     private List<List<Integer>> search_labels;
     private List<Integer> label;
-    private List<Integer> position;
+    private List<Float> position;
 
     public NeoRequestImage() {
         super();
     }
-    public NeoRequestImage(Float keywords_rate, List<String> keyWordList, List<Integer> pos, Float pow, Integer page_id, String id, Integer width, Integer height, List<List<Integer>> search_labels, List<Integer> label, List<Integer> position) {
+    public NeoRequestImage(Float keywords_rate, List<String> keyWordList, List<Integer> pos, Float pow, Integer page_id, String id, Integer width, Integer height, List<List<Integer>> search_labels, List<Integer> label, List<Float> position) {
         super();
         this.keywords_rate = keywords_rate;
         this.keyWordList = keyWordList;
@@ -100,10 +100,10 @@ public class NeoRequestImage implements Serializable, Cloneable {
     public void setLabel(List<Integer> label) {
         this.label = label;
     }
-    public List<Integer> getPosition() {
+    public List<Float> getPosition() {
         return position;
     }
-    public void setPosition(List<Integer> position) {
+    public void setPosition(List<Float> position) {
         this.position = position;
     }
 }

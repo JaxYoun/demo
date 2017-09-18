@@ -12,12 +12,13 @@ public class NeoRedisParentImage implements Serializable, Cloneable {
     private List<NeoSubImage> img_info;
     private List<Integer> label_info;
     private Integer price;
+    private Float labelScore;
 
     public NeoRedisParentImage() {
         super();
     }
 
-    public NeoRedisParentImage(String id, List<String> keyWordList, List<Integer> station, Float weight, List<NeoSubImage> img_info, List<Integer> label_info, Integer price) {
+    public NeoRedisParentImage(String id, List<String> keyWordList, List<Integer> station, Float weight, List<NeoSubImage> img_info, List<Integer> label_info, Integer price, Float labelScore) {
         super();
         this.id = id;
         this.keyWordList = keyWordList;
@@ -26,6 +27,7 @@ public class NeoRedisParentImage implements Serializable, Cloneable {
         this.img_info = img_info;
         this.label_info = label_info;
         this.price = price;
+        this.labelScore = labelScore;
     }
 
     @Override
@@ -74,5 +76,11 @@ public class NeoRedisParentImage implements Serializable, Cloneable {
     }
     public void setPrice(Integer price) {
         this.price = price;
+    }
+    public Float getLabelScore() {
+        return labelScore;
+    }
+    public void setLabelScore(Float labelScore) {
+        this.labelScore = labelScore;
     }
 }

@@ -20,7 +20,7 @@ public class FontServiceImpl implements IFontService {
     static {
 //        String threadPoolSize = PropertiesUtil.getPropMap().get("threadPoolSize");
 //        fixedPool = Executors.newFixedThreadPool(Integer.parseInt(threadPoolSize));
-        fixedPool = Executors.newFixedThreadPool(32);
+        fixedPool = Executors.newFixedThreadPool(6);
     }
 
     @Override

@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
 @RestController
-@RequestMapping(value = "/template")
+//@RequestMapping(value = "/template")
 public class TemplateController {
 
 	@Autowired

@@ -4,18 +4,18 @@ import java.io.Serializable;
 
 public class NeoSubImage implements Serializable, Cloneable {
 
-    private Integer weight;
+    private Integer width;
     private Integer height;
     private Float xy;
-    private Integer position;
+    private Float position;
     private String id;
 
     public NeoSubImage() {
         super();
     }
-    public NeoSubImage(Integer weight, Integer height, Float xy, Integer position, String id) {
+    public NeoSubImage(Integer width, Integer height, Float xy, Float position, String id) {
        super();
-        this.weight = weight;
+        this.width = width;
         this.height = height;
         this.xy = xy;
         this.position = position;
@@ -27,11 +27,11 @@ public class NeoSubImage implements Serializable, Cloneable {
         return super.clone();
     }
 
-    public Integer getWeight() {
-        return weight;
+    public Integer getWidth() {
+        return width;
     }
-    public void setWeight(Integer weight) {
-        this.weight = weight;
+    public void setWidth(Integer width) {
+        this.width = width;
     }
     public Integer getHeight() {
         return height;
@@ -45,10 +45,10 @@ public class NeoSubImage implements Serializable, Cloneable {
     public void setXy(Float xy) {
         this.xy = xy;
     }
-    public Integer getPosition() {
+    public Float getPosition() {
         return position;
     }
-    public void setPosition(Integer position) {
+    public void setPosition(Float position) {
         this.position = position;
     }
     public String getId() {

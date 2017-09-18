@@ -1,6 +1,5 @@
 package com.example.demo.caller;
 
-import com.example.demo.entity.Image;
 import com.example.demo.entity.neotemplate.*;
 
 import java.util.*;
@@ -8,18 +7,20 @@ import java.util.concurrent.Callable;
 
 public class NeoImageCaller implements Callable<NeoResponseImage> {
 
+    private Set<String> idSet;
     private String type;
     private NeoRequestImage neoRequestImage;
     private List<NeoRedisParentImage> neoRedisParentImageList;
     private Map<String, Float> ratioMap;
-    private final List<Float> floatList = Arrays.asList(0.1F, 0.14F, 0.2F, 0.25F, 0.33F, 0.5F, 0.67F, 1F, 1.5F, 2F, 3F, 4F, 5F, 7F, 10F, 12F);
+    private static final List<Float> floatList = Arrays.asList(0.1F, 0.14F, 0.2F, 0.25F, 0.33F, 0.5F, 0.67F, 1F, 1.5F, 2F, 3F, 4F, 5F, 7F, 10F, 12F);
 
-    public NeoImageCaller(String type, NeoRequestImage neoRequestImage, List<NeoRedisParentImage> neoRedisParentImageList, Map<String, Float> ratioMap) {
+    public NeoImageCaller(String type, NeoRequestImage neoRequestImage, List<NeoRedisParentImage> neoRedisParentImageList, Map<String, Float> ratioMap, Set<String> idSet) {
         super();
         this.type = type;
         this.neoRequestImage = neoRequestImage;
         this.neoRedisParentImageList = neoRedisParentImageList;
         this.ratioMap = ratioMap;
+        this.idSet = idSet;
     }
 
     @Override
@@ -62,7 +63,7 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
             /**
              * 以上两步结果相加乘以请求数据的keywords_rate, 再加上，【图片搜索】中第6步计算的【H】值*(1 - keywords_rate)。
              */
-            float finalScore = (keywordScore + positionScore) * neoRequestImage.getKeywords_rate() + (filtedRedisParentImage.getWeight() * (1 - neoRequestImage.getKeywords_rate()));
+            float finalScore = (keywordScore + positionScore) * neoRequestImage.getKeywords_rate() + (filtedRedisParentImage.getLabelScore() * (1 - neoRequestImage.getKeywords_rate()));
             myBage.setScore(finalScore);
 
             myBageList.add(myBage);
@@ -71,8 +72,17 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
         /**
          *挑出得分最高的一张大图
          */
-        List<MyBage> sortedMyBageList = sortList(myBageList, true);
-        NeoRedisParentImage finalNeoRedisParentImage = sortedMyBageList.get(0).getNeoRedisParentImage();
+        List<MyBage> sortedMyBageList = sortList(myBageList, false);
+        int myBageListSize = sortedMyBageList.size();
+        NeoRedisParentImage finalNeoRedisParentImage = null;
+        for (int i = 0; i < myBageListSize; i++) {
+            String imageId = sortedMyBageList.get(i).getId();
+            if (!idSet.contains(imageId)){
+                finalNeoRedisParentImage = sortedMyBageList.get(i).getNeoRedisParentImage();
+                idSet.add(imageId);
+                break;
+            }
+        }
 
         NeoResponseImage kk = new NeoResponseImage();
         kk.setImg_id(finalNeoRedisParentImage.getId());
@@ -174,11 +184,12 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
                     }
                 }
             }
-            if(inputLeng <= count){
+            if(inputLeng == count){
                 neoRParentImageList.add(neoRedisParentImage);
             }
         }
-        if(neoRedisParentImageList.size() == 0){  //如果通过search_label从redis匹配不到图片，就将整个redis表作为下一步的源数据集
+
+        if(neoRParentImageList.size() == 0){  //如果通过search_label从redis匹配不到图片，就将整个redis表作为下一步的源数据集
             neoRParentImageList = neoRedisParentImageList;
         }
 
@@ -186,7 +197,7 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
         float rate = 0F;
         if(neoRequestImage.getWidth() != null && neoRequestImage.getHeight() != null) {
             float kk = 1F * neoRequestImage.getWidth() / neoRequestImage.getHeight();
-            rate = getConst(kk);
+            rate = getConst(getFloatRemainTwoDot(kk));
         }
 
         List<NeoRedisParentImage> filtedRedisParentImageList = new ArrayList<>();
@@ -204,6 +215,11 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
             }
         }
 
+        //对于svg型图片，如果position未匹配到任何大图，就返回粗筛结果
+        if(("svg_key".equals(type) || "svg_icon_key".equals(type)) && filtedRedisParentImageList.size() == 0){
+            filtedRedisParentImageList = neoRParentImageList;
+        }
+
         //3：标签权重计算
         List<NeoRedisParentImage> weightedRedisParentImageList = new ArrayList<>();
         for (NeoRedisParentImage getIdAndWeight : filtedRedisParentImageList) {
@@ -213,7 +229,7 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
             } catch (CloneNotSupportedException e) {
                 e.printStackTrace();
             }
-            tempRImage.setWeight(getLabelWeight(neoRequestImage.getLabel(), getIdAndWeight.getLabel_info()));
+            tempRImage.setLabelScore(getLabelScore(neoRequestImage.getLabel(), getIdAndWeight.getLabel_info()));
             weightedRedisParentImageList.add(tempRImage);
         }
 
@@ -231,12 +247,11 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
      * @param hostLabelInfo redis图片的label数组
      * @return
      */
-    public static Float getLabelWeight(List<Integer> guestLabel, List<Integer> hostLabelInfo) {
+    public static Float getLabelScore(List<Integer> guestLabel, List<Integer> hostLabelInfo) {
         Float count = 0F;
         if(guestLabel != null){
             for (Integer hostLabel : hostLabelInfo) {
-                Double db = Double.valueOf(hostLabel.intValue());
-                if (guestLabel.contains(db)) {
+                if (guestLabel.contains(hostLabel)) {
                     count += 10F;
                 }
             }
@@ -251,7 +266,6 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
      */
     public float getConst(float input) {
         float result = 0F;
-//        List<Float> floatList = Arrays.asList(0.1F, 0.14F, 0.2F, 0.25F, 0.33F, 0.5F, 0.67F, 1F, 1.5F, 2F, 3F, 4F, 5F, 7F, 10F, 12F);
         int leng = floatList.size();
 
         if (!floatList.contains(input)) {
@@ -281,7 +295,7 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
      * @param redisImage
      * @return
      */
-    public List<NeoSubImage> adaptSubImageOfSingleImage(String type, float rate, List<Integer> positionList, Integer width, Integer height, NeoRedisParentImage redisImage) {
+    public List<NeoSubImage> adaptSubImageOfSingleImage(String type, float rate, List<Float> positionList, Integer width, Integer height, NeoRedisParentImage redisImage) {
         List<NeoSubImage> subimageList = new ArrayList<>();
         NeoSubImage subImg = null;
         for (NeoSubImage sub : redisImage.getImg_info()) {
@@ -289,31 +303,33 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
 
             switch (type) {
                 case "img_key" : {
-                    if (!isPositionListBlank && positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWeight() && height <= sub.getHeight()) {
+                    if (!isPositionListBlank && positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()) {
                         subimageList.add(sub);
-                    }else if(rate == sub.getXy() && width <= sub.getWeight() && height <= sub.getHeight()){
+                    }else if(rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()){
                         subimageList.add(sub);
                     }
                     break;
                 }
                 case "my_img_key" : {
-                    if (!isPositionListBlank && positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWeight() && height <= sub.getHeight()) {
+                    if (!isPositionListBlank && positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()) {
                         subimageList.add(sub);
-                    }else if(rate == sub.getXy() && width <= sub.getWeight() && height <= sub.getHeight()){
+                    }else if(rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()){
                         subimageList.add(sub);
                     }
                     break;
                 }
                 case "tmp_key" : {
-                    if (!isPositionListBlank && positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWeight() && height <= sub.getHeight()) {
+                    if (!isPositionListBlank && positionList.contains(sub.getPosition()) && rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()) {
                         subimageList.add(sub);
-                    }else if(rate == sub.getXy() && width <= sub.getWeight() && height <= sub.getHeight()){
+                    }else if(rate == sub.getXy() && width <= sub.getWidth() && height <= sub.getHeight()){
                         subimageList.add(sub);
                     }
                     break;
                 }
                 case "png_key" : {
-                    if (!isPositionListBlank && positionList.contains(sub.getPosition()) && width <= sub.getWeight() && height <= sub.getHeight()) {
+                    if (!isPositionListBlank && positionList.contains(sub.getPosition()) && width <= sub.getWidth() && height <= sub.getHeight()) {
+                        subimageList.add(sub);
+                    }else if(width <= sub.getWidth() && height <= sub.getHeight()){
                         subimageList.add(sub);
                     }
                     break;
@@ -339,5 +355,16 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
         }
         return subimageList;
     }
+
+    /**
+     * 保留两位小数【不四舍五入】
+     * @param originFloat
+     * @return
+     */
+    public float getFloatRemainTwoDot(final float originFloat){
+       return ((float)((int) (originFloat * 100))) / 100;
+    }
+
+//    public static void main(String[] args) { }
 
 }
