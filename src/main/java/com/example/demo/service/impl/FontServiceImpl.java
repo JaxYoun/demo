@@ -7,27 +7,27 @@ import com.google.typography.font.tools.sfnttool.SfntTool;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 @Service(value="fontService")
 public class FontServiceImpl implements IFontService {
 
-    static final ExecutorService fixedPool;
-
-    static {
-//        String threadPoolSize = PropertiesUtil.getPropMap().get("threadPoolSize");
-//        fixedPool = Executors.newFixedThreadPool(Integer.parseInt(threadPoolSize));
+    static final ExecutorService fixedPool = Executors.newFixedThreadPool(6);
+    /*static {
+        String threadPoolSize = PropertiesUtil.getPropMap().get("threadPoolSize");
+        fixedPool = Executors.newFixedThreadPool(Integer.parseInt(threadPoolSize));
         fixedPool = Executors.newFixedThreadPool(6);
-    }
+    }*/
 
     @Override
     public void extractFont(FontJsonParameter fontJsonParameter, String option, Map<String, Object> resultMap) throws IOException {
 
         for (FontParameter parm : fontJsonParameter.getFont_info()) {
-
             if(StringUtils.isBlank(parm.getExtract_str())){
                 resultMap.put("status", "error");
                 resultMap.put("message", "待抽取字符 不能为空！");

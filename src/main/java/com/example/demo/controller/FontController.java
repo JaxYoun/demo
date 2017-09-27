@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.font.FontJsonParameter;
+import com.example.demo.entity.font.FontParameter;
 import com.example.demo.service.IFontService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,13 +10,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping(value = "/font")
@@ -34,9 +35,7 @@ public class FontController {
     @RequestMapping(value = "/extractFont", method = RequestMethod.POST)
     public Map<String, Object> extractFont(@RequestBody String json) {
 
-        System.out.println("json----------" + json.substring(0, 200));
         Map<String, Object> resultMap = new HashMap<>();
-
         String arg = null;
         try {
             arg = URLDecoder.decode(json, "UTF-8");
@@ -46,6 +45,19 @@ public class FontController {
         try {
             FontJsonParameter fontJsonParameter = jacksonMapper.readValue(arg, FontJsonParameter.class);
             fontService.extractFont(fontJsonParameter, OPTION, resultMap);
+
+            List<String> destPathList = new ArrayList<>();
+            for (FontParameter kk : fontJsonParameter.getFont_info()) {
+                destPathList.add(kk.getFont_path());
+            }
+
+            while(destPathList.size() != 0) { //it.hasNext()) {
+                Iterator<String> it = destPathList.iterator();
+                if(it.hasNext() && ifFileExist(it.next())) {
+                    it.remove();
+                }
+            }
+
             resultMap.put("status", "success");
             resultMap.put("message", "抽取成功！");
         } catch (IOException e) {
@@ -56,6 +68,13 @@ public class FontController {
             System.out.println("| | |extractFont---当前时间:" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + this.getClass().getSimpleName());
         }
         return resultMap;
+    }
+
+    public boolean ifFileExist(String filePath) {
+        boolean isExist;
+        File file = new File(filePath);
+        isExist = file.exists();
+        return isExist;
     }
 
 }

@@ -78,17 +78,14 @@
 		    <artifactId>guava</artifactId>
 		    <version>23.0</version>
 		</dependency>
-		<!-- <dependency>
-			<groupId>com.youn</groupId>
-			<artifactId>sfnt</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/src/lib/mySfnttool.jar</systemPath>
-		</dependency> -->
 		<dependency>
 			<groupId>com.youn</groupId>
 			<artifactId>mySfnttool</artifactId>
 			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 	</dependencies>
 	
