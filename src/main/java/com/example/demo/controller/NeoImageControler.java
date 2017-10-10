@@ -23,9 +23,6 @@ import java.time.format.DateTimeFormatter;
 public class NeoImageControler {
 
     @Autowired
-    private static RedisUtils redisUtils;
-
-    @Autowired
     private IImageService imageService;
 
     private static final ObjectMapper jacksonMapper = new ObjectMapper();

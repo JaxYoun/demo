@@ -23,12 +23,12 @@ public class RedisUtils {
 	public static String redisMyImageValue = null;
 	public static String redisPngValue = null;
 	public static String redisSvgValue = null;
-	public static String redisSvgIconValue = null;  //svg_icon_key
+	public static String redisSvgIconValue = null;
 	public static String redisTmpValue = null;
 	public static String redisImageRatioValue = null;
 	
 	private static final JedisPool jedisPool;
-	static{
+	static {
 		JedisPoolConfig config = new JedisPoolConfig();
 		config.setMaxTotal(5);
 		config.setMaxIdle(2);
@@ -55,8 +55,7 @@ public class RedisUtils {
 		redisTmpValue = getByKey("tmp_key");
 		redisImageRatioValue = getByKey("img_ratio");
 	}
-	
-	
+
 	public static String getJsonImageRatioList() {
 		ObjectMapper jacksonMapper = new ObjectMapper();
 		
@@ -77,7 +76,7 @@ public class RedisUtils {
 	}
 	
 	@SuppressWarnings("deprecation")
-	public static String getByKey(String key){
+	public static String getByKey(String key) {
 		System.err.println("---->从Redis获取了：" + key);
 		Jedis jedis = null;
 		String value = null;
@@ -91,13 +90,24 @@ public class RedisUtils {
 		}
 		return value;
 	}
-	
-	public static String putByKey(String key, String value){
+
+	/**
+	 * 像redis中存key-value对
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public static String putByKey(String key, String value) {
 		Jedis jedis = jedisPool.getResource();
 		return jedis.set(key, value);
 	}
-	
-	public static String getRedisValueByKey(String key){
+
+	/**
+	 * 根据key，从静态变量读取value
+	 * @param key
+	 * @return
+	 */
+	public static String getRedisValueByKey(String key) {
 		String valueString = null;
 		switch (key) {
 			case "img_key" : {
@@ -128,13 +138,14 @@ public class RedisUtils {
 				valueString = redisImageRatioValue;
 				break;
 			}
-
 		}
-
 		return valueString;
 	}
-	
-	public static void loadAllValueFromRedis(){
+
+	/**
+	 * 从redis读取所有key
+	 */
+	public static void loadAllValueFromRedis() {
 		redisImageValue = getByKey("img_key");
 		redisMyImageValue = getByKey("my_img_key");
 		redisPngValue = getByKey("png_key");
@@ -143,9 +154,12 @@ public class RedisUtils {
 		redisTmpValue = getByKey("tmp_key");
 		redisImageRatioValue = getByKey("img_ratio");
 	}
-	
+
+	/**
+	 * 定时调度
+	 */
 	@Scheduled(cron = "0 45 5 * * *")
-	public void timer(){
+	public void timer() {
 	    System.out.println("当前时间为:" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 	    loadAllValueFromRedis();
 	}

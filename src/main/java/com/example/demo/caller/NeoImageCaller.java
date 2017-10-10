@@ -70,17 +70,20 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
         }
 
         /**
-         *挑出得分最高的一张大图
+         *从得分最高的前5张中，随机挑出一张大图
          */
         List<MyBage> sortedMyBageList = sortList(myBageList, false);
         int myBageListSize = sortedMyBageList.size();
         NeoRedisParentImage finalNeoRedisParentImage = null;
         for (int i = 0; i < myBageListSize; i++) {
-            String imageId = sortedMyBageList.get(i).getId();
-            if (!idSet.contains(imageId)){
-                finalNeoRedisParentImage = sortedMyBageList.get(i).getNeoRedisParentImage();
-                idSet.add(imageId);
-                break;
+            int topFiveRandomIndex = (i / 3) * 3 + new Random().nextInt(3);  //构造随机数
+            if(topFiveRandomIndex < myBageListSize){
+                String imageId = sortedMyBageList.get(topFiveRandomIndex).getId();
+                if (!idSet.contains(imageId)){
+                    finalNeoRedisParentImage = sortedMyBageList.get(topFiveRandomIndex).getNeoRedisParentImage();
+                    idSet.add(imageId);
+                    break;
+                }
             }
         }
 
@@ -233,8 +236,6 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
             weightedRedisParentImageList.add(tempRImage);
         }
 
-
-
         return weightedRedisParentImageList;
     }
 
@@ -365,6 +366,11 @@ public class NeoImageCaller implements Callable<NeoResponseImage> {
        return ((float)((int) (originFloat * 100))) / 100;
     }
 
-//    public static void main(String[] args) { }
+    /*public static void main(String[] args) {
+        for (int i = 0; i < 10; i++) {
+            int topFiveRandomIndex = (i / 5) * 5 + new Random().nextInt(5);
+            System.out.println(topFiveRandomIndex);
+        }
+    }*/
 
 }
