@@ -31,8 +31,8 @@ public class ImageController {
     @Value("${gif.quality}")
     private int gifQuality;
 
-    @Autowired
-    private AnimatedGifEncoder animatedGifEncoder;
+    /*@Autowired
+    private AnimatedGifEncoder animatedGifEncoder;*/
 
     /**
      * 将多帧图片编码为Gif，原图最好是png，因为jpg会导致生成的gif体积过于膨胀
@@ -88,14 +88,15 @@ public class ImageController {
             return null;
         }
 
+        AnimatedGifEncoder animatedGifEncoder;
         List<String> targetGifPathList = new ArrayList<>();
-        AnimatedGifEncoder animatedGifEncoder = new AnimatedGifEncoder();
-        animatedGifEncoder.setDelay(1);
-        animatedGifEncoder.setRepeat(-1);
-        animatedGifEncoder.setQuality(gifQuality);
-//        animatedGifEncoder.setQuality(50);
-
         for (String framePath : framePathList) {
+            animatedGifEncoder = new AnimatedGifEncoder();
+            animatedGifEncoder.setDelay(1);
+            animatedGifEncoder.setRepeat(-1);
+//        animatedGifEncoder.setQuality(gifQuality);
+            animatedGifEncoder.setQuality(50);
+
             int lastIndexOfDot = framePath.lastIndexOf('.');
             String targetGifPath = framePath.substring(0, lastIndexOfDot) + ".gif";
             animatedGifEncoder.start(targetGifPath);
@@ -149,7 +150,7 @@ public class ImageController {
      * @param filePath
      * @return
      */
-    public static boolean ifFileExist(String filePath) {
+    public boolean ifFileExist(String filePath) {
         boolean isExist;
         File file = new File(filePath);
         isExist = file.exists();
@@ -157,9 +158,15 @@ public class ImageController {
     }
 
     public static void main(String[] args) {
-        /*String path = "E:\\TEST\\ChengJie\\imageToGif\\test\\png\\455-1.png";
+        /*String path = "E:\\TEST\\ChengJie\\imageToGif\\test\\png\\455-0.png";
+        String path1 = "E:\\TEST\\ChengJie\\imageToGif\\test\\png\\455-1.png";
+        String path2 = "E:\\TEST\\ChengJie\\imageToGif\\test\\png\\4556-1.png";
+
         List<String> list = new ArrayList<>();
         list.add(path);
+        list.add(path1);
+        list.add(path2);
+
         encodeFrameListToGif(list);*/
 
        /*try {
