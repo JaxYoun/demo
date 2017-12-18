@@ -12,10 +12,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @Author：YangJx
@@ -32,24 +29,43 @@ public class GifServiceImpl implements IGifService {
     @Value("${gif.poolSize}")
     private static int gifPoolSize;
 
-    private static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(3, 6, 4, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(6), new ThreadPoolExecutor.DiscardOldestPolicy());
+    private static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(
+            6,
+            8,
+            60,
+            TimeUnit.SECONDS,
+            new LinkedBlockingDeque<>(16),
+            Executors.defaultThreadFactory(),
+            new ThreadPoolExecutor.DiscardOldestPolicy()
+    );
 
     @Override
     public List<String> encodeImageToGigWithMultiThread(List<String> framePathList) {
-        List<String> targetPathList = new ArrayList<>(framePathList.size());
+        List<FutureTask<String>> futureTaskList = new ArrayList<>();
         for (String path : framePathList) {
-            FutureTask<String> futureTask;
             try {
-                futureTask = new FutureTask<>(new GifCaller(path));
+                FutureTask<String> futureTask = new FutureTask<>(new GifCaller(path));
                 threadPool.submit(futureTask);
-                targetPathList.add(futureTask.get());
+                futureTaskList.add(futureTask);
             } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        }
+
+        List<String> targetPathList = new ArrayList<>(framePathList.size());
+        for (FutureTask<String> it : futureTaskList) {
+            try {
+                targetPathList.add(it.get());
+            } catch (InterruptedException e) {
+                log.error(e.getMessage(), e);
+            } catch (ExecutionException e) {
                 log.error(e.getMessage(), e);
             }
         }
 
         List<String> tempList = new ArrayList<>(targetPathList.size());
         tempList.addAll(targetPathList);
+
         while (tempList.size() != 0) {
             Iterator<String> it = tempList.iterator();
             if (it.hasNext() && ifFileExist(it.next())) {
@@ -66,13 +82,12 @@ public class GifServiceImpl implements IGifService {
             return null;
         }
 
-        AnimatedGifEncoder animatedGifEncoder;
         List<String> targetGifPathList = new ArrayList<>();
         for (String framePath : framePathList) {
-            animatedGifEncoder = new AnimatedGifEncoder();
+            AnimatedGifEncoder animatedGifEncoder = new AnimatedGifEncoder();
             animatedGifEncoder.setDelay(1);
             animatedGifEncoder.setRepeat(-1);
-            animatedGifEncoder.setQuality(gifQuality);
+            animatedGifEncoder.setQuality(this.gifQuality);
 //            animatedGifEncoder.setQuality(50);
 
             int lastIndexOfDot = framePath.lastIndexOf('.');

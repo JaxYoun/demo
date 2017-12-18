@@ -7,12 +7,11 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
 
-@Service(value = "colorService")
+@Service
 public class ColorServiceImpl implements IColorService {
 
     @Override
     public void colorMapping(String srcImagePath, String destImagePath, int colorMapCode) throws Exception {
-
         Mat originMat = null;
         Mat destinMat = null;
 
@@ -25,8 +24,8 @@ public class ColorServiceImpl implements IColorService {
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
-        }finally{
-            if (originMat != null){
+        } finally {
+            if (originMat != null) {
                 originMat.release();
             }
             if (destinMat != null) {

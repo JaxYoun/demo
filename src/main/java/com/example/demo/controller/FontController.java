@@ -5,10 +5,7 @@ import com.example.demo.entity.font.FontParameter;
 import com.example.demo.service.IFontService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
-@RequestMapping(value = "/font")
+@RequestMapping("/font")
 public class FontController {
 
     @Autowired
@@ -32,7 +29,7 @@ public class FontController {
      * 字体抽取
      * @return 返回消息
      */
-    @RequestMapping(value = "/extractFont", method = RequestMethod.POST)
+    @PostMapping("/extractFont")
     public Map<String, Object> extractFont(@RequestBody String json) {
 
         Map<String, Object> resultMap = new HashMap<>();
