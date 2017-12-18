@@ -1,88 +1,66 @@
-package com.example.demo.controller;
+package com.example.demo.service.impl;
 
-import com.example.demo.entity.gif.FramePath;
+import com.example.demo.caller.GifCaller;
+import com.example.demo.service.IGifService;
 import com.example.demo.util.gifUtil.AnimatedGifEncoder;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.io.*;
-import java.net.URLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author：YangJx
- * @Description：图片处理
- * @DateTime：2017/12/7 20:07
+ * @Description：
+ * @DateTime：2017/12/18 11:46
  */
 @Slf4j
-@RestController
-@RequestMapping("/image")
-public class ImageController {
-
-    private static final ObjectMapper jacksonMapper = new ObjectMapper();
+@Service
+public class GifServiceImpl implements IGifService {
 
     @Value("${gif.quality}")
     private int gifQuality;
 
-    /*@Autowired
-    private AnimatedGifEncoder animatedGifEncoder;*/
+    @Value("${gif.poolSize}")
+    private static int gifPoolSize;
 
-    /**
-     * 将多帧图片编码为Gif，原图最好是png，因为jpg会导致生成的gif体积过于膨胀
-     *
-     * @param json
-     * @return
-     */
-    @PostMapping("/transImageToGif")
-    public Object transImageToGif(@RequestBody String json) {
-        Map<String, Object> resultMap = new HashMap<>();
-        log.info("transImageToGif");
-        String arg = null;
-        try {
-            arg = URLDecoder.decode(json, "UTF-8");
-        } catch (UnsupportedEncodingException e1) {
-            resultMap.put("code", "500");
-            resultMap.put("message", "请求参数格式非法！");
-            resultMap.put("data", null);
-            e1.printStackTrace();
+    private static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(3, 6, 4, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(6), new ThreadPoolExecutor.DiscardOldestPolicy());
+
+    @Override
+    public List<String> encodeImageToGigWithMultiThread(List<String> framePathList) {
+        List<String> targetPathList = new ArrayList<>(framePathList.size());
+        for (String path : framePathList) {
+            FutureTask<String> futureTask;
+            try {
+                futureTask = new FutureTask<>(new GifCaller(path));
+                threadPool.submit(futureTask);
+                targetPathList.add(futureTask.get());
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
         }
 
-        FramePath framePath = null;
-        try {
-            framePath = jacksonMapper.readValue(arg, FramePath.class);
-        } catch (IOException e) {
-            resultMap.put("code", "500");
-            resultMap.put("message", "请求参数格式非法！");
-            resultMap.put("data", null);
-            e.printStackTrace();
+        List<String> tempList = new ArrayList<>(targetPathList.size());
+        tempList.addAll(targetPathList);
+        while (tempList.size() != 0) {
+            Iterator<String> it = tempList.iterator();
+            if (it.hasNext() && ifFileExist(it.next())) {
+                it.remove();
+            }
         }
 
-        List<String> resultList = encodeFrameListToGif(framePath.getPathList());
-        if (resultList == null) {
-            resultMap.put("code", "500");
-            resultMap.put("message", "请求参数非法！");
-            resultMap.put("data", null);
-        } else {
-            resultMap.put("code", "200");
-            resultMap.put("message", "转换成功！");
-            resultMap.put("data", resultList);
-        }
-        return resultMap;
+        return targetPathList;
     }
 
-    /**
-     * 将多帧图片编码为Gif
-     *
-     * @param framePathList
-     * @return
-     */
+    @Override
     public List<String> encodeFrameListToGif(List<String> framePathList) {
         if (framePathList == null || framePathList.size() == 0) {
             return null;
@@ -94,8 +72,8 @@ public class ImageController {
             animatedGifEncoder = new AnimatedGifEncoder();
             animatedGifEncoder.setDelay(1);
             animatedGifEncoder.setRepeat(-1);
-//        animatedGifEncoder.setQuality(gifQuality);
-            animatedGifEncoder.setQuality(50);
+            animatedGifEncoder.setQuality(gifQuality);
+//            animatedGifEncoder.setQuality(50);
 
             int lastIndexOfDot = framePath.lastIndexOf('.');
             String targetGifPath = framePath.substring(0, lastIndexOfDot) + ".gif";
@@ -104,7 +82,7 @@ public class ImageController {
             InputStream inputStream_2 = null;
             try {
                 inputStream_1 = new FileInputStream(framePath);
-                inputStream_2 = new FileInputStream(framePath); //"E:\\TEST\\ChengJie\\imageToGif\\test\\422-0-副本.jpg");
+                inputStream_2 = new FileInputStream(framePath);
                 animatedGifEncoder.addFrame(ImageIO.read(inputStream_1));
                 animatedGifEncoder.addFrame(ImageIO.read(inputStream_2));
                 animatedGifEncoder.finish();
@@ -133,7 +111,6 @@ public class ImageController {
 
         List<String> tempList = new ArrayList<>(targetGifPathList.size());
         tempList.addAll(targetGifPathList);
-
         while (tempList.size() != 0) {
             Iterator<String> it = tempList.iterator();
             if (it.hasNext() && ifFileExist(it.next())) {
@@ -150,7 +127,7 @@ public class ImageController {
      * @param filePath
      * @return
      */
-    public boolean ifFileExist(String filePath) {
+    public static boolean ifFileExist(String filePath) {
         boolean isExist;
         File file = new File(filePath);
         isExist = file.exists();
@@ -158,7 +135,7 @@ public class ImageController {
     }
 
     public static void main(String[] args) {
-        /*String path = "E:\\TEST\\ChengJie\\imageToGif\\test\\png\\455-0.png";
+        String path = "E:\\TEST\\ChengJie\\imageToGif\\test\\png\\455-0.png";
         String path1 = "E:\\TEST\\ChengJie\\imageToGif\\test\\png\\455-1.png";
         String path2 = "E:\\TEST\\ChengJie\\imageToGif\\test\\png\\4556-1.png";
 
@@ -167,12 +144,14 @@ public class ImageController {
         list.add(path1);
         list.add(path2);
 
-        encodeFrameListToGif(list);*/
+//        encodeFrameListToGif(list);
+//        transImageToGigWithMultThread(list);
 
        /*try {
             Thumbnails.of("E:\\TEST\\ChengJie\\imageToGif\\test\\500179127.png").scale(1F).outputQuality(1F).toFile("E:\\TEST\\ChengJie\\imageToGif\\test\\500179127kkk.jpg");
         } catch (IOException e) {
             e.printStackTrace();
         }*/
+
     }
 }

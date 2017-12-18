@@ -44,7 +44,7 @@ public class FontServiceImpl implements IFontService {
                 paramArr[2] = parm.getFont_ori_path();
                 paramArr[3] = parm.getFont_path();
 
-                Thread t = new Thread(""){
+                Thread t = new Thread("fontThread"){
                     @Override
                     public void run() {
                         try {
