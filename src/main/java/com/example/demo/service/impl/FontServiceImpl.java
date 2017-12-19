@@ -4,17 +4,18 @@ import com.example.demo.entity.font.FontJsonParameter;
 import com.example.demo.entity.font.FontParameter;
 import com.example.demo.service.IFontService;
 import com.google.typography.font.tools.sfnttool.SfntTool;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
-@Service(value = "fontService")
+@Service
+@Slf4j
 public class FontServiceImpl implements IFontService {
 
     private static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(
@@ -28,7 +29,10 @@ public class FontServiceImpl implements IFontService {
     );
 
     @Override
-    public void extractFont(FontJsonParameter fontJsonParameter, String option, Map<String, Object> resultMap) throws IOException {
+    public List<String> extractFont(FontJsonParameter fontJsonParameter, String option, Map<String, Object> resultMap) throws IOException {
+
+        List<String> destPathList = new ArrayList<>();
+        List<FutureTask<String>> futureTaskList = new ArrayList<>();
 
         for (FontParameter parm : fontJsonParameter.getFont_info()) {
             if (StringUtils.isBlank(parm.getExtract_str())) {
@@ -47,7 +51,16 @@ public class FontServiceImpl implements IFontService {
                 paramArr[2] = parm.getFont_ori_path();
                 paramArr[3] = parm.getFont_path();
 
-                Thread t = new Thread("fontThread") {
+
+                FutureTask<String> futureTask = new FutureTask<>(new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        SfntTool.main(paramArr);
+                        return paramArr[3];
+                    }
+                });
+
+                /*Thread thread = new Thread("fontThread") {
                     @Override
                     public void run() {
                         try {
@@ -56,10 +69,24 @@ public class FontServiceImpl implements IFontService {
                             e.printStackTrace();
                         }
                     }
-                };
-                threadPool.submit(t);
+                };*/
+
+                threadPool.submit(futureTask);
+                futureTaskList.add(futureTask);
             }
         }
+
+        for (FutureTask<String> it : futureTaskList) {
+            try {
+                destPathList.add(it.get());
+            } catch (InterruptedException e) {
+                log.error(e.getMessage(), e);
+            } catch (ExecutionException e) {
+                log.error(e.getMessage(), e);
+            }
+        }
+
+        return destPathList;
     }
 
 }

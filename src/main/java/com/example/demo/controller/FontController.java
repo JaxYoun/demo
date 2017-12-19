@@ -21,6 +21,7 @@ public class FontController {
 
     @Autowired
     private IFontService fontService;
+
     private static final String OPTION = "-s";  //google包之命令选项
 
     private static final ObjectMapper jacksonMapper = new ObjectMapper();
@@ -41,14 +42,9 @@ public class FontController {
         }
         try {
             FontJsonParameter fontJsonParameter = jacksonMapper.readValue(arg, FontJsonParameter.class);
-            fontService.extractFont(fontJsonParameter, OPTION, resultMap);
+            List<String> destPathList = fontService.extractFont(fontJsonParameter, OPTION, resultMap);
 
-            List<String> destPathList = new ArrayList<>();
-            for (FontParameter kk : fontJsonParameter.getFont_info()) {
-                destPathList.add(kk.getFont_path());
-            }
-
-            while(destPathList.size() != 0) { //it.hasNext()) {
+            while(destPathList.size() != 0) {
                 Iterator<String> it = destPathList.iterator();
                 if(it.hasNext() && ifFileExist(it.next())) {
                     it.remove();
