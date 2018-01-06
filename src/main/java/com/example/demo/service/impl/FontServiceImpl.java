@@ -52,13 +52,20 @@ public class FontServiceImpl implements IFontService {
                 paramArr[3] = parm.getFont_path();
 
 
-                FutureTask<String> futureTask = new FutureTask<>(new Callable<String>() {
+                /*FutureTask<String> futureTask = new FutureTask<>(new Callable<String>() {
                     @Override
                     public String call() throws Exception {
                         SfntTool.main(paramArr);
                         return paramArr[3];
                     }
-                });
+                });*/
+
+                Callable<String> caller = () -> {
+                    SfntTool.main(paramArr);
+                    return paramArr[3];
+                };
+                FutureTask<String> futureTask = new FutureTask<>(caller);
+
 
                 /*Thread thread = new Thread("fontThread") {
                     @Override
@@ -85,6 +92,13 @@ public class FontServiceImpl implements IFontService {
                 log.error(e.getMessage(), e);
             }
         }
+
+        /*try {
+            threadPool.shutdown();
+            threadPool.awaitTermination(5L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+        }*/
 
         return destPathList;
     }
